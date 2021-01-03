@@ -24,6 +24,8 @@ An alternative implementation of the [Bitwarden API](https://github.com/bitwarde
 
 ## Current status
 
+**In mid-2020 I have stopped using this backend for my own personal purposes and the repository is in best-effort maintainenance mode based on reported issues. I'd be more than happy to hand it over to a dedicated maintainer.**
+
 - [x] Tested with Chrome extension
 - [x] Tested with Android app
 - [x] Tested with Desktop app (macOS)
@@ -100,7 +102,7 @@ By default you will get a generated API gateway URL which is quite long. You can
 1. Issue an AWS ACM certificate for that domain in the `us-east-1` region (free). This will require you to add a verification CNAME or confirm a link on an e-mail going to that domain.
 1. Wait some time until the certificate activates (1 hour?)
 1. Go to the API Gateway console and under the Custom Domains section add a new mapping with your domain.
-1. Add the final CNAME in your DNS configuration, the target value will be in the format `<id>.cloudfront.net`
+1. Add the final CNAME in your DNS configuration, the target value will be in the following format:`<id>.cloudfront.net` for Edge-optimised or `<id>.execute-api.region.amazonaws.com`for Regional endpoint type
 
 ## Motivation
 

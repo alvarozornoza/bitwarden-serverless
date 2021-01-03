@@ -16,6 +16,8 @@ provider:
   runtime: nodejs10.x
   memorySize: 256
   timeout: 10
+  logs:
+    restApi: true
   environment:
     DEVICES_TABLE: ${self:service}-${self:provider.stage}-devices
     USERS_TABLE: ${self:service}-${self:provider.stage}-users
@@ -96,6 +98,8 @@ functions:
           path: api/accounts/keys
   register:
     handler: src/register.handler
+    environment:
+      DISABLE_USER_REGISTRATION: ${env:DISABLE_USER_REGISTRATION, 'false'}
     events:
       - http:
           method: post
