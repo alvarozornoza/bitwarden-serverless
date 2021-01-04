@@ -5,13 +5,14 @@ const devicesTableName = process.env.DEVICES_TABLE;
 const usersTableName = process.env.USERS_TABLE;
 const cipherTableName = process.env.CIPHERS_TABLE;
 const folderTableName = process.env.FOLDERS_TABLE;
+const attachmentsTableName = process.env.ATTACHMENTS_TABLE;
 
 // Bind internal dynogels logger to console, it supports warn/info/error as needed
 dynogels.log = console;
 
 // The migration script runs updates on the models depending on each row's version
 // This is the latest version available for each model, new entries have this version
-export const CIPHER_MODEL_VERSION = 1;
+export const CIPHER_MODEL_VERSION = 2;
 export const USER_MODEL_VERSION = 2;
 
 export const Device = dynogels.define('Device', {
@@ -70,7 +71,6 @@ export const Cipher = dynogels.define('Cipher', {
     version: Joi.number().allow(null),
     data: Joi.object().allow(null),
     favorite: Joi.boolean(),
-    attachments: Joi.any().allow(null),
     name: Joi.string().allow(null),
     notes: Joi.string().allow(null),
     fields: Joi.any().allow(null),
@@ -91,5 +91,20 @@ export const Folder = dynogels.define('Folder', {
     userUuid: Joi.string().required(),
     uuid: dynogels.types.uuid(), // Auto-generated
     name: Joi.string().required(),
+  },
+});
+
+export const Attachment = dynogels.define('Attachment', {
+  hashKey: 'cipherUuid',
+  rangeKey: 'uuid',
+  timestamps: true,
+  tableName: attachmentsTableName,
+
+  schema: {
+    cipherUuid: Joi.string().required(),
+    uuid: dynogels.types.uuid(), // Auto-generated
+    filename: Joi.string().required(),
+    size: Joi.number().required(),
+    key: Joi.string(),
   },
 });

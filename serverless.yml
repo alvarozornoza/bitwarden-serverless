@@ -9,6 +9,7 @@ service:
 plugins:
   - serverless-webpack
   - serverless-offline
+  - serverless-apigw-binary
 
 provider:
   name: aws
@@ -23,7 +24,18 @@ provider:
     USERS_TABLE: ${self:service}-${self:provider.stage}-users
     CIPHERS_TABLE: ${self:service}-${self:provider.stage}-ciphers
     FOLDERS_TABLE: ${self:service}-${self:provider.stage}-folders
+    ATTACHMENTS_TABLE: ${self:service}-${self:provider.stage}-attachments
+    ATTACHMENTS_BUCKET: ${self:service}-${self:provider.stage}-storage
   iamRoleStatements:
+    - Effect: 'Allow'
+      Action:
+        - 's3:GetObject'
+        - 's3:GetObjectAcl'
+        - 's3:PutObject'
+        - 's3:PutObjectAcl'
+        - 's3:DeleteObject'
+      Resource:
+        - "arn:aws:s3:::${self:provider.environment.ATTACHMENTS_BUCKET}/*"
     - Effect: Allow
       Action:
         - dynamodb:Query
@@ -37,10 +49,16 @@ provider:
         - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.USERS_TABLE}"
         - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.CIPHERS_TABLE}"
         - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.FOLDERS_TABLE}"
+        - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.ATTACHMENTS_TABLE}"
   usagePlan:
     throttle:
       burstLimit: 300 # request burst
       rateLimit: 5 # requests per second
+
+custom:
+  apigwBinary:
+    types:
+      - 'multipart/form-data'
 
 default_cors: &default_cors
   cors:
@@ -150,6 +168,20 @@ functions:
           method: delete
           <<: *default_cors
           path: api/ciphers/{uuid}
+  cipher_attachment_post:
+    handler: src/attachments.postHandler
+    events:
+      - http:
+          method: post
+          <<: *default_cors
+          path: api/ciphers/{uuid}/attachment
+  cipher_attachment_delete:
+    handler: src/attachments.deleteHandler
+    events:
+      - http:
+          method: delete
+          <<: *default_cors
+          path: api/ciphers/{uuid}/attachment/{attachmentId}
   folder_post:
     handler: src/folders.postHandler
     events:
@@ -201,10 +233,20 @@ functions:
           <<: *default_cors
           path: /{fallback+}
 
-
-
 resources:
   Resources:
+    AttachmentsBucket:
+      Type: AWS::S3::Bucket
+      DeletionPolicy: ${self:service.tableDeletionPolicy.${self:provider.stage}, self:service.tableDeletionPolicy.other}
+      Properties:
+        VersioningConfiguration:
+          Status: Enabled
+        BucketEncryption:
+          ServerSideEncryptionConfiguration:
+            - ServerSideEncryptionByDefault:
+                SSEAlgorithm: aws:kms
+        BucketName: ${self:provider.environment.ATTACHMENTS_BUCKET}
+
     UsersTable:
       Type: AWS::DynamoDB::Table
       DeletionPolicy: ${self:service.tableDeletionPolicy.${self:provider.stage}, self:service.tableDeletionPolicy.other}
@@ -269,6 +311,27 @@ resources:
             AttributeType: S
         KeySchema:
           - AttributeName: userUuid
+            KeyType: HASH
+          - AttributeName: uuid
+            KeyType: RANGE
+        ProvisionedThroughput:
+          ReadCapacityUnits: 1
+          WriteCapacityUnits: 1
+        PointInTimeRecoverySpecification:
+          PointInTimeRecoveryEnabled: true
+
+    AttachmentsTable:
+      Type: AWS::DynamoDB::Table
+      DeletionPolicy: ${self:service.tableDeletionPolicy.${self:provider.stage}, self:service.tableDeletionPolicy.other}
+      Properties:
+        TableName: ${self:provider.environment.ATTACHMENTS_TABLE}
+        AttributeDefinitions:
+          - AttributeName: cipherUuid
+            AttributeType: S
+          - AttributeName: uuid
+            AttributeType: S
+        KeySchema:
+          - AttributeName: cipherUuid
             KeyType: HASH
           - AttributeName: uuid
             KeyType: RANGE

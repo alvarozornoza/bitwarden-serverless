@@ -152,6 +152,15 @@ export function buildUserDocument(body) {
   return user;
 }
 
+export function buildAttachmentDocument(attachment, attachmentKey, cipher) {
+  return {
+    cipherUuid: cipher.get('uuid'),
+    uuid: attachment.id,
+    filename: attachment.filename,
+    size: attachment.size,
+    key: attachmentKey,
+  };
+}
 
 export function generateSecret() {
   return crypto.randomBytes(64).toString('hex');
