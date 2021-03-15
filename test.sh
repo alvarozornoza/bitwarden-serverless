@@ -11,7 +11,7 @@ trap cleanup INT
 ./node_modules/.bin/eslint .
 
 STAGE="test${GITHUB_RUN_ID}"
-REGION=${REGION:eu-west-3}
+REGION=${REGION:-eu-west-3}
 
 serverless deploy --stage ${STAGE} --region ${REGION}
 API_URL=$(serverless info --stage ${STAGE} --region ${REGION} --verbose | grep ServiceEndpoint | cut -d":" -f2- | xargs) \
