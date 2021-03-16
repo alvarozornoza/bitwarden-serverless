@@ -8,6 +8,7 @@ function cleanup {
 trap cleanup EXIT
 trap cleanup INT
 
+
 ./node_modules/.bin/eslint .
 
 STAGE="test${GITHUB_RUN_ID}"
