@@ -23,7 +23,6 @@ custom:
         - Device-type
         - Pragma
         - Cache-Control
-      allowMethods: "GET, POST, OPTIONS, PUT, DELETE"
 
 plugins:
   - serverless-webpack
