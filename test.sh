@@ -11,7 +11,7 @@ trap cleanup INT
 
 ./node_modules/.bin/eslint .
 
-STAGE="test${GITHUB_RUN_ID}"
+STAGE="test${GITHUB_RUN_ID:-$RANDOM}"
 REGION=${REGION:-eu-west-3}
 
 serverless deploy --stage ${STAGE} --region ${REGION}

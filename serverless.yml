@@ -33,6 +33,7 @@ provider:
   name: aws
   stage: ${opt:stage, 'prod'}
   runtime: nodejs10.x
+  lambdaHashingVersion: 20201221
   memorySize: 256
   timeout: 10
   logs:
@@ -44,34 +45,38 @@ provider:
     FOLDERS_TABLE: ${self:service}-${self:provider.stage}-folders
     ATTACHMENTS_TABLE: ${self:service}-${self:provider.stage}-attachments
     ATTACHMENTS_BUCKET: ${self:service}-${self:provider.stage}-storage
-  iamRoleStatements:
-    - Effect: 'Allow'
-      Action:
-        - 's3:GetObject'
-        - 's3:GetObjectAcl'
-        - 's3:PutObject'
-        - 's3:PutObjectAcl'
-        - 's3:DeleteObject'
-      Resource:
-        - "arn:aws:s3:::${self:provider.environment.ATTACHMENTS_BUCKET}/*"
-    - Effect: Allow
-      Action:
-        - dynamodb:Query
-        - dynamodb:Scan
-        - dynamodb:GetItem
-        - dynamodb:PutItem
-        - dynamodb:UpdateItem
-        - dynamodb:DeleteItem
-      Resource:
-        - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DEVICES_TABLE}"
-        - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.USERS_TABLE}"
-        - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.CIPHERS_TABLE}"
-        - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.FOLDERS_TABLE}"
-        - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.ATTACHMENTS_TABLE}"
-  usagePlan:
-    throttle:
-      burstLimit: 300 # request burst
-      rateLimit: 5 # requests per second
+  iam:
+    role:
+      statements:
+        - Effect: 'Allow'
+          Action:
+            - 's3:GetObject'
+            - 's3:GetObjectAcl'
+            - 's3:PutObject'
+            - 's3:PutObjectAcl'
+            - 's3:DeleteObject'
+          Resource:
+            - "arn:aws:s3:::${self:provider.environment.ATTACHMENTS_BUCKET}/*"
+        - Effect: Allow
+          Action:
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource:
+            - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.DEVICES_TABLE}"
+            - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.USERS_TABLE}"
+            - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.CIPHERS_TABLE}"
+            - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.FOLDERS_TABLE}"
+            - "arn:aws:dynamodb:${opt:region, self:provider.region}:*:table/${self:provider.environment.ATTACHMENTS_TABLE}"
+  apiGateway: 
+    shouldStartNameWithService: true
+    usagePlan:
+      throttle:
+        burstLimit: 300 # request burst
+        rateLimit: 5 # requests per second
       
 functions:
   # Identity endpoints
