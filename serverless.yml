@@ -170,9 +170,9 @@ functions:
     handler: src/ciphers.deleteHandler
     events:
       - http:
-          method: delete
+          method: put
           <<: *default_cors
-          path: api/ciphers/{uuid}
+          path: api/ciphers/{uuid}/delete
   cipher_attachment_post:
     handler: src/attachments.postHandler
     events:
